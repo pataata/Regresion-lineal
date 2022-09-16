@@ -1,6 +1,9 @@
-#Ruben Sanchez Mayen A01378379
+# Autor: Ruben Sanchez Mayen A01378379
+# Implementación de algoritmo de regresión lineal múltiple
+# 15 de Septiembre de 2022
 
 import random
+import matplotlib.pyplot as plt
 
 def h(samples, params):
     y = 0
@@ -8,15 +11,26 @@ def h(samples, params):
         y = y + params[i]*samples[i]
     return y
 
-def show_error(params, samples,y):
-    error_acum =0
-    for i in range(len(samples)):
+
+def accuracy(params, samples,y):
+
+    n = len(samples) #number of samples
+    # Calculate mean of y
+    y_sum = 0
+    for i in range(n):
+       y_sum += y[i]
+    y_mean = y_sum/n
+
+    # Calculate determination coefficent "R^2"
+    acum_s_err = 0 # square error
+    acum_s_var = 0 # square variance
+
+    for i in range(n):
         hyp = h(params,samples[i])
-        #print( "hyp  %f  y %f " % (hyp,  y[i]))
-        error=hyp-y[i]
-        error_acum=+error**2 
-    mean_error_param=error_acum/len(samples)
-    print('Average square error:',mean_error_param)
+        acum_s_err += (hyp - y_mean)**2
+        acum_s_var += (y[i] - y_mean)**2
+
+    return acum_s_err/acum_s_var
 
 def GD(params, samples, y, alfa):  
     temp = list(params)
@@ -55,9 +69,9 @@ def generate_samples(m):
     return [x_samples,y_samples,]
 
 # Hyper parameters
-m = 100
+m = 50
 alpha = .0001
-epochs = 0
+
 
 #  Data preparation
 samples_xy = generate_samples(m)
@@ -69,24 +83,25 @@ prediction = [1, 4, 2, 8]
 # Add beta0 to samples
 for i in range(len(samples)):
 	if isinstance(samples[i], list):
-		samples[i]=  [1]+samples[i]
+		samples[i] =  [1]+samples[i]
 	else:
-		samples[i]=  [1,samples[i]]
+		samples[i] =  [1,samples[i]]
 
 #Multiple tests changing the train and test data sets
 for i in range(5):
-    print('\nIteration: ',i+1)
-    print()
+    print('\nIteration: ',i+1, '\n')
     x_train = []; y_train = []; x_test = []; y_test = []
     
-    for j in range(len(samples)): # fill the train/test data sets
+    # fill the train/test data sets with random samples
+    for j in range(len(samples)): 
         n = random.randint(0,m-1)
+        # Training: %80 of samples
         if(j <= len(samples)*.8 ):
             #train data set
             x_train.append(samples[n])
             y_train.append(y[n])
+        # Pruebas: %20 of samples
         else:
-            #test data set
             x_test.append(samples[n])
             y_test.append(y[n])
 
@@ -94,6 +109,7 @@ for i in range(5):
     #print('Test data set: ',x_test,y_test)
 
     epochs = 0
+
     while True:  #  run gradient descent until local minima is reached
         past_params = list(params)
         params=GD(params, x_train,y_train,alpha)	
@@ -102,7 +118,7 @@ for i in range(5):
             #print ("samples:")
             #print(samples)
             print ("final params:",params)
-            show_error(params, x_test, y_test)
+            print('Accuracy:',accuracy(params, x_test, y_test))
             print ('Estimated Y for',prediction,':',end=' ')
             estimated_y = 0
             for j in range(len(params)):
